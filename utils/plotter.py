@@ -14,6 +14,8 @@ def plot_population(obstacles, path_points, population, path_lengths, duration):
 def plot_chromosome(obstacles, path_points, chromosome, path_length, duration):
     reset_plot(obstacles, path_points)
 
+    plt.gca().invert_yaxis()
+
     path_x = [path_points[j][0] for j, c in enumerate(chromosome) if c == True]
     path_y = [path_points[j][1] for j, c in enumerate(chromosome) if c == True]
 

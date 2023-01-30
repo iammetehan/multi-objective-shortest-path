@@ -32,7 +32,7 @@ class ShortestPath(ElementwiseProblem):
         if validity:
             penalty = 0
 
-        plot_chromosome(self.obstacles, self.path_points, x, route_length, 0.0025)
+        # plot_chromosome(self.obstacles, self.path_points, x, route_length, 0.0025)
         out['F'] = [route_length, penalty]
 
 
