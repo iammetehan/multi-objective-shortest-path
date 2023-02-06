@@ -9,11 +9,20 @@ import struct
 path_points = []
 threats = []
 
+src = (0, 0)
+dst = (0, 0)
+
 mapPointSocket = socket.socket(type=socket.SOCK_DGRAM)
 mapPointSocket.bind(('localhost', 4651))
 
 threatsPointSocket = socket.socket(type=socket.SOCK_DGRAM)
 threatsPointSocket.bind(('localhost', 4652))
+
+srcDstSocket = socket.socket(type=socket.SOCK_DGRAM)
+srcDstSocket.bind(('localhost', 4653))
+
+startSimSocket = socket.socket(type=socket.SOCK_DGRAM)
+startSimSocket.bind(('localhost', 4654))
 
 
 def set_map_points(data):
@@ -31,10 +40,6 @@ def set_map_points(data):
                             temp_path_points[k + 1]))
         i += 1
         k += 2
-
-    print("fmt : ", fmt)
-    print(len(path_points))
-    print(path_points)
 
 
 def set_threats_points(data):
@@ -60,27 +65,69 @@ def set_threats_points(data):
         i += 1
         k += 8
 
-    print("fmt : ", fmt)
-    print(len(threats))
-    print(threats)
 
-    path_points.append((150, 50))
-    path_points.insert(0, (1000, 550))
+def set_src_dst(data):
+    global src
+    global dst
 
-    start_algorithm(threats, path_points)
+    temp_src_dst_points = struct.unpack(">4d", data)
+    src = (temp_src_dst_points[0], temp_src_dst_points[1])
+    dst = (temp_src_dst_points[2], temp_src_dst_points[3])
 
+
+def find_paths():
+    global threats
+    global path_points
+
+    path_points.insert(0, src)
+    path_points.append(dst)
+
+    print("Algorithm started!")
+    send_results(start_algorithm(threats, path_points))
+
+
+def send_results(data):
+
+    # route = convert_to_int_indices(data[1])
+
+    # print(route)
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.sendto(bytes(data), ('localhost', 4655))
+
+    print("send_results - success!")
+
+
+def convert_to_int_indices(indices):
+    intIndices = []
+    index = 0
+    while index < len(indices):
+        if indices[index]:
+            intIndices.append(index)
+        index = index + 1
+
+    return intIndices
 
 
 def main():
     while True:
         mapPointsData = mapPointSocket.recv(80000)
         threatPointsData = threatsPointSocket.recv(8000)
+        srcDstData = srcDstSocket.recv(1024)
+        startSimData = startSimSocket.recv(1024)
 
         if 0 != mapPointsData:
             set_map_points(mapPointsData)
 
         if 0 != threatPointsData:
             set_threats_points(threatPointsData)
+
+        if 0 != srcDstData:
+            set_src_dst(srcDstData)
+
+        if 0 != startSimData:
+            if "FindPath" == startSimData.decode():
+                find_paths()
 
 
 if __name__ == '__main__':
